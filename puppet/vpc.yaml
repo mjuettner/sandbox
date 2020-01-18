@@ -1,0 +1,326 @@
+AWSTemplateFormatVersion: 2010-09-09
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label:
+          default: Setup
+        Parameters:
+          - ResourcePrefix
+          - NumberOfAvailabilityZones
+      - Label:
+          default: Details
+        Parameters:
+          - ClassB
+          - ConfigureInternetGateway
+          - ConfigureNATGateway
+    ParameterLabels:
+      ResourcePrefix:
+        default: "Resource Prefix"
+      NumberOfAvailabilityZones:
+        default: "Number of Availability Zones"
+      ClassB:
+        default: "Class B"
+      ConfigureInternetGateway:
+        default: "Configure Internet Gateway"
+      ConfigureNATGateway:
+        default: "Configure NAT Gateway"
+Parameters:
+  ResourcePrefix:
+    Description: Enter a prefix to prepend to various tags, resource names, and exports.
+    Type: String
+  NumberOfAvailabilityZones:
+    Description: Select the number of Availability Zones to configure.
+    Type: Number
+    AllowedValues:
+      - 1
+      - 2
+      - 3
+  ClassB:
+    Description: Specify the Class B of the VPC (10.xxx.0.0/16).
+    Type: Number
+    Default: 0
+    MinValue: 0
+    MaxValue: 255
+    ConstraintDescription: 'Must be in the range [0 - 255].'
+  ConfigureInternetGateway:
+    Description: Specify 'Yes' to configure an Internet Gateway for the public subnet(s).
+    Type: String
+    Default: 'No'
+    AllowedValues:
+      - 'Yes'
+      - 'No'
+  ConfigureNATGateway:
+    Description: Specify 'Yes' to configure a NAT Gateway in every provisioned Availability Zone.
+    Type: String
+    Default: 'No'
+    AllowedValues:
+      - 'Yes'
+      - 'No'
+Conditions:
+  ConfigureAZ3: !Equals [!Ref NumberOfAvailabilityZones, 3]
+  ConfigureAZ2: !Or [!Equals [!Ref NumberOfAvailabilityZones, 2], !Condition ConfigureAZ3]
+  ConfigureInternetGateway: !Equals [!Ref ConfigureInternetGateway, 'Yes']
+  ConfigureNATGateway: !Equals [!Ref ConfigureNATGateway, 'Yes']
+  ConfigureNATGatewayAZ2: !And [!Condition ConfigureAZ2, !Condition ConfigureNATGateway]
+  ConfigureNATGatewayAZ3: !And [!Condition ConfigureAZ3, !Condition ConfigureNATGateway]
+Resources:
+  ##### VPC ###############################################
+  VPC:
+    Type: 'AWS::EC2::VPC'
+    Properties:
+      CidrBlock: !Sub '10.${ClassB}.0.0/16'
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      InstanceTenancy: default
+      Tags:
+        - Key: Name
+          Value: !Sub '${ResourcePrefix}-vpc'
+  ##### Internet Gateway ##################################
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Condition: ConfigureInternetGateway
+    Properties:
+      Tags:
+        - Key: Name
+          Value: !Sub ${ResourcePrefix}-internet-gateway
+  VPCGatewayAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Condition: ConfigureInternetGateway
+    Properties:
+      VpcId: !Ref VPC
+      InternetGatewayId: !Ref InternetGateway
+  ##### Subnets ###########################################
+  PublicSubnet1:
+    Type: 'AWS::EC2::Subnet'
+    Properties:
+      AvailabilityZone: !Select [0, !GetAZs '']
+      CidrBlock: !Sub '10.${ClassB}.0.0/20'
+      MapPublicIpOnLaunch: false
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Sub '${ResourcePrefix}-public-subnet-1'
+  PrivateSubnet1:
+    Type: 'AWS::EC2::Subnet'
+    Properties:
+      AvailabilityZone: !Select [0, !GetAZs '']
+      CidrBlock: !Sub '10.${ClassB}.48.0/20'
+      MapPublicIpOnLaunch: false
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Sub '${ResourcePrefix}-private-subnet-1'
+  PublicSubnet2:
+    Type: 'AWS::EC2::Subnet'
+    Condition: ConfigureAZ2
+    Properties:
+      AvailabilityZone: !Select [1, !GetAZs '']
+      CidrBlock: !Sub '10.${ClassB}.16.0/20'
+      MapPublicIpOnLaunch: false
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Sub '${ResourcePrefix}-public-subnet-2'
+  PrivateSubnet2:
+    Type: 'AWS::EC2::Subnet'
+    Condition: ConfigureAZ2
+    Properties:
+      AvailabilityZone: !Select [1, !GetAZs '']
+      CidrBlock: !Sub '10.${ClassB}.64.0/20'
+      MapPublicIpOnLaunch: false
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Sub '${ResourcePrefix}-private-subnet-2'
+  PublicSubnet3:
+    Type: 'AWS::EC2::Subnet'
+    Condition: ConfigureAZ3
+    Properties:
+      AvailabilityZone: !Select [2, !GetAZs '']
+      CidrBlock: !Sub '10.${ClassB}.32.0/20'
+      MapPublicIpOnLaunch: false
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Sub '${ResourcePrefix}-public-subnet-3'
+  PrivateSubnet3:
+    Type: 'AWS::EC2::Subnet'
+    Condition: ConfigureAZ3
+    Properties:
+      AvailabilityZone: !Select [2, !GetAZs '']
+      CidrBlock: !Sub '10.${ClassB}.80.0/20'
+      MapPublicIpOnLaunch: false
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Sub '${ResourcePrefix}-private-subnet-3'
+  ##### NAT Gateway #######################################
+  NATGatewayEIP1:
+    Type: 'AWS::EC2::EIP'
+    Condition: ConfigureNATGateway
+    Properties:
+      Domain: vpc
+  NATGatewayEIP2:
+    Type: 'AWS::EC2::EIP'
+    Condition: ConfigureNATGatewayAZ2
+    Properties:
+      Domain: vpc
+  NATGatewayEIP3:
+    Type: 'AWS::EC2::EIP'
+    Condition: ConfigureNATGatewayAZ3
+    Properties:
+      Domain: vpc
+  NATGateway1:
+    Type: AWS::EC2::NatGateway
+    Condition: ConfigureNATGateway
+    Properties:
+      AllocationId: !GetAtt NATGatewayEIP1.AllocationId
+      SubnetId: !Ref PublicSubnet1
+      Tags:
+        - Key: Name
+          Value: !Sub '${ResourcePrefix}-nat-gateway-1'
+  NATGateway2:
+    Type: AWS::EC2::NatGateway
+    Condition: ConfigureNATGatewayAZ2
+    Properties:
+      AllocationId: !GetAtt NATGatewayEIP2.AllocationId
+      SubnetId: !Ref PublicSubnet2
+      Tags:
+        - Key: Name
+          Value: !Sub '${ResourcePrefix}-nat-gateway-2'
+  NATGateway3:
+    Type: AWS::EC2::NatGateway
+    Condition: ConfigureNATGatewayAZ3
+    Properties:
+      AllocationId: !GetAtt NATGatewayEIP3.AllocationId
+      SubnetId: !Ref PublicSubnet3
+      Tags:
+        - Key: Name
+          Value: !Sub '${ResourcePrefix}-nat-gateway-3'
+  ##### Route Tables ######################################
+  PublicSubnetsRouteTable:
+    Type: 'AWS::EC2::RouteTable'
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Sub '${ResourcePrefix}-public-subnets-route-table-0'
+  PrivateSubnet1RouteTable:
+    Type: 'AWS::EC2::RouteTable'
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Sub '${ResourcePrefix}-private-subnet-1-route-table'
+  PrivateSubnet2RouteTable:
+    Type: 'AWS::EC2::RouteTable'
+    Condition: ConfigureAZ2
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Sub '${ResourcePrefix}-private-subnet-2-route-table'
+  PrivateSubnet3RouteTable:
+    Type: 'AWS::EC2::RouteTable'
+    Condition: ConfigureAZ3
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Sub '${ResourcePrefix}-private-subnet-3-route-table'
+  PublicSubnet1RouteTableAssociation:
+    Type: 'AWS::EC2::SubnetRouteTableAssociation'
+    Properties:
+      SubnetId: !Ref PublicSubnet1
+      RouteTableId: !Ref PublicSubnetsRouteTable
+  PublicSubnet2RouteTableAssociation:
+    Type: 'AWS::EC2::SubnetRouteTableAssociation'
+    Condition: ConfigureAZ2
+    Properties:
+      SubnetId: !Ref PublicSubnet2
+      RouteTableId: !Ref PublicSubnetsRouteTable
+  PublicSubnet3RouteTableAssociation:
+    Type: 'AWS::EC2::SubnetRouteTableAssociation'
+    Condition: ConfigureAZ3
+    Properties:
+      SubnetId: !Ref PublicSubnet3
+      RouteTableId: !Ref PublicSubnetsRouteTable
+  PrivateSubnet1RouteTableAssociation:
+    Type: 'AWS::EC2::SubnetRouteTableAssociation'
+    Properties:
+      SubnetId: !Ref PrivateSubnet1
+      RouteTableId: !Ref PrivateSubnet1RouteTable
+  PrivateSubnet2RouteTableAssociation:
+    Type: 'AWS::EC2::SubnetRouteTableAssociation'
+    Condition: ConfigureAZ2
+    Properties:
+      SubnetId: !Ref PrivateSubnet2
+      RouteTableId: !Ref PrivateSubnet2RouteTable
+  PrivateSubnet3RouteTableAssociation:
+    Type: 'AWS::EC2::SubnetRouteTableAssociation'
+    Condition: ConfigureAZ3
+    Properties:
+      SubnetId: !Ref PrivateSubnet3
+      RouteTableId: !Ref PrivateSubnet3RouteTable
+  ##### Routes ############################################
+  PublicRoute:
+    Type: 'AWS::EC2::Route'
+    Condition: ConfigureInternetGateway
+    Properties:
+      RouteTableId: !Ref PublicSubnetsRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
+  PrivateSubnet1InternetRoute:
+    Type: 'AWS::EC2::Route'
+    Condition: ConfigureNATGateway
+    Properties:
+      RouteTableId: !Ref PrivateSubnet1RouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: !Ref NATGateway1
+  PrivateSubnet2InternetRoute:
+    Condition: ConfigureNATGatewayAZ2
+    Type: 'AWS::EC2::Route'
+    Properties:
+      RouteTableId: !Ref PrivateSubnet2RouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: !Ref NATGateway2
+  PrivateSubnet3InternetRoute:
+    Condition: ConfigureNATGatewayAZ3
+    Type: 'AWS::EC2::Route'
+    Properties:
+      RouteTableId: !Ref PrivateSubnet3RouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: !Ref NATGateway3
+Outputs:
+  VpcId:
+    Value: !Ref VPC
+    Export:
+      Name: !Sub ${ResourcePrefix}-vpc-id
+  PublicSubnet1:
+    Value: !Ref PublicSubnet1
+    Export:
+      Name: !Sub ${ResourcePrefix}-public-subnet-1
+  PrivateSubnet1:
+    Value: !Ref PrivateSubnet1
+    Export:
+      Name: !Sub ${ResourcePrefix}-private-subnet-1
+  PublicSubnet2:
+    Condition: ConfigureAZ2
+    Value: !Ref PublicSubnet2
+    Export:
+      Name: !Sub ${ResourcePrefix}-public-subnet-2
+  PrivateSubnet2:
+    Condition: ConfigureAZ2
+    Value: !Ref PrivateSubnet2
+    Export:
+      Name: !Sub ${ResourcePrefix}-private-subnet-2
+  PublicSubnet3:
+    Condition: ConfigureAZ3
+    Value: !Ref PublicSubnet3
+    Export:
+      Name: !Sub ${ResourcePrefix}-public-subnet-3
+  PrivateSubnet3:
+    Condition: ConfigureAZ3
+    Value: !Ref PrivateSubnet3
+    Export:
+      Name: !Sub ${ResourcePrefix}-private-subnet-3
