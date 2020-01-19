@@ -1,11 +1,12 @@
 # Playing with Puppet
 
-- Create a new EC2 Key Pair, I'll assume it's named 'puppet'
-- Deploy the vpc.yaml CloudFormation template to create a basic network infrastructure.  I'm going to be lazy and put the EC2 instances in the public subnet(s), so you don't have to have a NAT Gateway
+## Setup
+- Create a new EC2 Key Pair named 'puppet'
+- Deploy the vpc.yaml CloudFormation template to create a basic network infrastructure, you will need an Internet Gateway, but not any NAT Gateways
 - Deploy the puppet-sg.yaml CloudFormation template to create the Security Group to use with the EC2 instances
 - Deploy the puppet-master.yaml CloudFormation template to create the Master Puppet Server
-- Deploy the puppet-slaves.yaml CloudFormation template to create a few Puppet Slaves.
-  - As these slaves come online and set up the Puppet Agent, you will see them register with the Master and you can sign and accept them all
+- Deploy the puppet-slaves.yaml CloudFormation template to create a few Puppet Slaves
+  - As these slaves come online and set up the Puppet Agent, you will see them register with the Master and you can sign and accept their certificate requests
 ```bash
 [root@ip-10-0-1-132 ~]# puppetserver ca list
 Requested Certificates:
