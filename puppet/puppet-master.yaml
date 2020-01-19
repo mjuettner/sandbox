@@ -1,0 +1,31 @@
+AWSTemplateFormatVersion: 2010-09-09
+Resources:
+  PuppetSG:
+      Type: AWS::EC2::SecurityGroup
+      Properties: 
+          GroupDescription: Puppet SG
+          GroupName: puppet-sg
+          VpcId: !ImportValue myvpc-vpc-id
+  PuppetSGIngressSSH:
+      Type: AWS::EC2::SecurityGroupIngress 
+      Properties:
+          Description: Global SSH
+          GroupId: !Ref PuppetSG
+          CidrIp: 0.0.0.0/0
+          IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+  PuppetSGIngressPuppet:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+        Description: Puppet
+        GroupId: !Ref PuppetSG
+        IpProtocol: tcp
+        FromPort: 8140
+        ToPort: 8140
+        SourceSecurityGroupId: !Ref PuppetSG
+Outputs:
+    PuppetSGId:
+        Value: !Ref PuppetSG
+        Export:
+            Name: puppet-sg-id
