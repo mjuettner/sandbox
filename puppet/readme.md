@@ -19,3 +19,6 @@ Successfully signed certificate request for ip-10-0-13-250.ec2.internal
 Successfully signed certificate request for ip-10-0-21-63.ec2.internal
 Successfully signed certificate request for ip-10-0-42-168.ec2.internal
 ```
+
+## Usage
+- Start writing and pushing Manifests and Modules now
