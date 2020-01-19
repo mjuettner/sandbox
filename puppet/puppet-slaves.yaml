@@ -1,0 +1,77 @@
+AWSTemplateFormatVersion: 2010-09-09
+Resources:
+    PuppetSlave1:
+        Type: AWS::EC2::Instance
+        Properties:
+            InstanceType: t2.micro
+            ImageId: ami-062f7200baf2fa504
+            KeyName: puppet
+            Monitoring: true
+            Tags:
+                - Key: Name
+                  Value: puppet-slave-1
+            NetworkInterfaces:
+                - AssociatePublicIpAddress: true
+                  DeviceIndex: 0
+                  GroupSet:
+                    - !ImportValue puppet-sg-id
+                  SubnetId: !ImportValue myvpc-public-subnet-1
+            UserData:
+                Fn::Base64: !Sub |
+                    #!/bin/bash -xe
+                    rpm -ivh https://yum.puppet.com/puppet6/puppet-release-el-7.noarch.rpm
+                    yum install -y puppet-agent
+                    sudo -- sh -c 'echo -en $"\n[main]\nserver = ip-10-0-1-132.ec2.internal" >> /etc/puppetlabs/puppet/puppet.conf'
+                    /opt/puppetlabs/bin/puppet resource service puppet ensure=running enable=true
+                    yum update -y
+                    reboot
+    PuppetSlave2:
+        Type: AWS::EC2::Instance
+        Properties:
+            InstanceType: t2.micro
+            ImageId: ami-062f7200baf2fa504
+            KeyName: puppet
+            Monitoring: true
+            Tags:
+                - Key: Name
+                  Value: puppet-slave-2
+            NetworkInterfaces:
+                - AssociatePublicIpAddress: true
+                  DeviceIndex: 0
+                  GroupSet:
+                    - !ImportValue puppet-sg-id
+                  SubnetId: !ImportValue myvpc-public-subnet-2
+            UserData:
+                Fn::Base64: !Sub |
+                    #!/bin/bash -xe
+                    rpm -ivh https://yum.puppet.com/puppet6/puppet-release-el-7.noarch.rpm
+                    yum install -y puppet-agent
+                    sudo -- sh -c 'echo -en $"\n[main]\nserver = ip-10-0-1-132.ec2.internal" >> /etc/puppetlabs/puppet/puppet.conf'
+                    /opt/puppetlabs/bin/puppet resource service puppet ensure=running enable=true
+                    yum update -y
+                    reboot
+    PuppetSlave3:
+        Type: AWS::EC2::Instance
+        Properties:
+            InstanceType: t2.micro
+            ImageId: ami-062f7200baf2fa504
+            KeyName: puppet
+            Monitoring: true
+            Tags:
+                - Key: Name
+                  Value: puppet-slave-3
+            NetworkInterfaces:
+                - AssociatePublicIpAddress: true
+                  DeviceIndex: 0
+                  GroupSet:
+                    - !ImportValue puppet-sg-id
+                  SubnetId: !ImportValue myvpc-public-subnet-3
+            UserData:
+                Fn::Base64: !Sub |
+                    #!/bin/bash -xe
+                    rpm -ivh https://yum.puppet.com/puppet6/puppet-release-el-7.noarch.rpm
+                    yum install -y puppet-agent
+                    sudo -- sh -c 'echo -en $"\n[main]\nserver = ip-10-0-1-132.ec2.internal" >> /etc/puppetlabs/puppet/puppet.conf'
+                    /opt/puppetlabs/bin/puppet resource service puppet ensure=running enable=true
+                    yum update -y
+                    reboot
