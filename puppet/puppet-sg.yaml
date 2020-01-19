@@ -24,3 +24,8 @@ Resources:
         FromPort: 8140
         ToPort: 8140
         SourceSecurityGroupId: !Ref PuppetSG
+Outputs:
+    PuppetSGId:
+        Value: !Ref PuppetSG
+        Export:
+            Name: puppet-sg-id
