@@ -6,7 +6,7 @@
 - Deploy the puppet-sg.yaml CloudFormation template to create the Security Group to use with the EC2 instances
 - Deploy the puppet-master.yaml CloudFormation template to create the Master Puppet Server
 - Deploy the puppet-slaves.yaml CloudFormation template to create a few Puppet Slaves
-  - You'll need to update the UserData section to update the echo command with the internal DNS name of your Master server
+  - Update the UserData section to modify the echo command with the internal DNS name of your Master server
   - As these slaves come online and set up the Puppet Agent, you will see them register with the Master and you can sign and accept their certificate requests
 ```bash
 [root@ip-10-0-1-132 ~]# puppetserver ca list
