@@ -7,7 +7,7 @@ from urllib.parse import urlparse
 # Inputs:
 #   - operation: create
 #   - cloudformation_config_uri: s3://somebucket/some_stack_config.json
-#       - A json document specifying kwargs for boto3 create_stack
+#       - S3 URL to a json document specifying kwargs for boto3 create_stack
 #       - https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/cloudformation.html#CloudFormation.Client.create_stack
 
 logger = logging.getLogger(__name__)
