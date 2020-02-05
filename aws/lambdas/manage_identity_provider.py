@@ -2,6 +2,14 @@ import boto3
 import logging
 import os
 
+# Inputs
+#   - operation: verify, update, create
+#
+# Environment Variables
+#   - ProviderName: Specify the name of the Identity Provider to operate on
+#   - SamlDocBucket: Specify the S3 bucket where the new Identity Provider SAML file resides, the script will look for
+#     a <ProviderName>.xml file there.
+    
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
@@ -11,10 +19,7 @@ s3 = boto3.resource('s3')
 def lambda_handler(event, context):
     logger.info(event)
     
-    # Environment Variables
-    # ProviderName: Specify the name of the Identity Provider to operate on
-    # SamlDocBucket: Specify the S3 bucket where the new Identity Provider SAML file resides, the script
-    #   will look for a <ProviderName>.xml file there.
+
     gov_saml_doc = _get_saml_doc(os.environ['ProviderName'], os.environ['SamlDocBucket'])
     
     if (event['operation'].lower() == 'verify'):
