@@ -5,7 +5,8 @@ from ast import literal_eval
 # Inputs
 #  operation: verify, update
 #
-# Environment Variables on this Lambda should specify parameters for the AWS UpdateAccountPasswordPolicy API to update or verify
+# Environment Variables
+#   - Specify parameters for the AWS UpdateAccountPasswordPolicy API to update or verify
 #   - https://docs.aws.amazon.com/IAM/latest/APIReference/API_UpdateAccountPasswordPolicy.html
 
 logger = logging.getLogger(__name__)
