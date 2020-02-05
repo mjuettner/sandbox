@@ -8,6 +8,11 @@ logger.setLevel(logging.INFO)
 lambda_client = boto3.client('lambda')
 iam_client = boto3.client('iam')
 
+# Inputs
+#  operation: verify, update
+# Environment Variables
+#   EVs on this Lambda should specify parameters for the AWS UpdateAccountPasswordPolicy API
+#   - https://docs.aws.amazon.com/IAM/latest/APIReference/API_UpdateAccountPasswordPolicy.html
 def lambda_handler(event, context):
     logger.info(event)
         
