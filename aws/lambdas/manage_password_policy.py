@@ -2,17 +2,18 @@ import boto3
 import logging
 from ast import literal_eval
 
+# Inputs
+#  operation: verify, update
+#
+# Environment Variables on this Lambda should specify parameters for the AWS UpdateAccountPasswordPolicy API to update or verify
+#   - https://docs.aws.amazon.com/IAM/latest/APIReference/API_UpdateAccountPasswordPolicy.html
+
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 lambda_client = boto3.client('lambda')
 iam_client = boto3.client('iam')
 
-# Inputs
-#  operation: verify, update
-# Environment Variables
-#   EVs on this Lambda should specify parameters for the AWS UpdateAccountPasswordPolicy API
-#   - https://docs.aws.amazon.com/IAM/latest/APIReference/API_UpdateAccountPasswordPolicy.html
 def lambda_handler(event, context):
     logger.info(event)
         
