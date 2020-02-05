@@ -3,7 +3,7 @@ import logging
 from ast import literal_eval
 
 # Inputs
-#  operation: verify, update
+#  - operation: verify, update
 #
 # Environment Variables
 #   - Specify parameters for the AWS UpdateAccountPasswordPolicy API to update or verify
