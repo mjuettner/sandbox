@@ -4,17 +4,18 @@ import os
 import json
 from urllib.parse import urlparse
 
+# Inputs:
+#   operation: create
+#   cloudformation_config_uri: s3://somebucket/some_stack_config.json
+#     - Should be a json document specifying kwargs for boto3 create_stack
+#     - https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/cloudformation.html#CloudFormation.Client.create_stack
+
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 s3 = boto3.resource('s3')
 cfn_client = boto3.client('cloudformation')
 
-# Inputs:
-#   operation: create
-#   cloudformation_config_uri: s3://somebucket/some_stack_config.json
-#     - Should be a json document specifying kwargs for boto3 create_stack
-#     - https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/cloudformation.html#CloudFormation.Client.create_stack
 def lambda_handler(event, context):
     logger.info(event)
     
